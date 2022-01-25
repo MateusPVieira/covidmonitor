@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{url_for('static', filename='img/magnifier.png')}}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <!-- CSS only -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+
+  <title>Monitoramento</title>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <header class="row mb-5" id="topbar">
+      <div class="col-sm-10 col-md-8 m-auto">
+        <nav class="text-center">
+          <h1>Será que volta?</h1>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container-fluid mb-5 ">
+      <section class="row d-flex justify-content-center mb-5" id="UTI">
+        <div class="col-sm-10 col-md-6 mr-3">
+          <div class="row">
+            <div class="table-responsive">
+              <table class="table shadow p-3">
+                <thead class="table-dark">
+                  <th scope="col">Ocupação leitos UTI</th>
+                  <th scope="col">   %</th>
+                </thead>
+
+                <tbody>
+                  <td>Total</th>
+                  <td>{{dados['uti']}}</td>
+                </tbody>
+                <tfoot class="table-warning">
+                  <td>Limite:</th>
+                  <td><strong>60%</strong></td>
+                </tfoot>
+              </table>
+            </div>
+            <div class="col-sm-10 col-md-6 mb-5">
+
+              <canvas id="lineChart1"></canvas>
+              <script>
+                var ctx = document.getElementById("lineChart1").getContext("2d");
+
+                var lineChart = new Chart(ctx, {
+                  type: "line",
+                  data: {
+                    labels: {{ graphdata['datagraph'] | safe }},
+                datasets: [
+                  {
+                    label: "UTI",
+                    data: {{ graphdata['uti'] | safe }},
+                  fill: false,
+                  borderColor: "rgb(255, 127, 80)",
+                  lineTension: 0.1
+                  }
+                ]
+              },
+                options: {
+                  responsive: true
+                }
+            });
+
+              </script>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="table-responsive">
+              <table class="table text-center shadow p-3 ">
+                <thead class="table-dark">
+                  <th>Total</th>
+                  <th>Novos*</th>
+                  <th>Novos casos/100 mil habitantes/14 dias</th>
+                </thead>
+
+                <tbody>
+                  <td>{{dados['totcasos']}}</td>
+                  <td>{{dados['novoscasos']}}</td>
+                  <td>{{dados['novoscasosmedia']}}</td>
+                </tbody>
+                <tfoot class="table-warning">
+                  <th colspan="2">Limite:</th>
+                  <td><strong>30</strong></td>
+                </tfoot>
+              </table>
+              <p>fonte: <a href="http://coronavirus.saocarlos.sp.gov.br/" rel="external" target="_blank">Subcomitê de
+                  Comunicação de Combate
+                  ao Coronavírus</a></p>
+            </div>
+
+            <div class="col-sm-10 col-md-6">
+              <canvas id="lineChart2"></canvas>
+              <script>
+                var ctx = document.getElementById("lineChart2").getContext("2d");
+                var lineChart = new Chart(ctx, {
+                  type: "line",
+                  data: {
+                    labels: {{ graphdata['datagraph'] | safe }},
+                datasets: [
+                  {
+                    label: "Casos/100mil Habitantes - 14 dias",
+                    data: {{ graphdata['novoscasosmedia'] | safe }},
+                  fill: false,
+                  borderColor: "rgb(139, 0, 0)",
+                  lineTension: 0.1
+                  }
+                ]
+              },
+                options: {
+                  responsive: true
+                }
+            });
+              </script>
+            </div>
+
+            <div class="col-sm-10 col-md-6 mb-5">
+              <canvas id="lineChart3"></canvas>
+              <script>
+                var ctx = document.getElementById("lineChart3").getContext("2d");
+                var lineChart = new Chart(ctx, {
+                  type: "line",
+                  data: {
+                    labels: {{ graphdata['datagraph'] | safe }},
+                datasets: [
+                  {
+                    label: "Novos Casos",
+                    data: {{ graphdata['novoscasos'] | safe }},
+                  fill: false,
+                  borderColor: "rgb(184, 134, 11)",
+                  lineTension: 0.1
+                }
+                ]
+            },
+                options: {
+                  responsive: true
+                }
+          });
+              </script>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-10  col-md-3 mb-5 m-5 mt-0 ">
+          <div class="table-responsive">
+            <table class="table shadow p-3">
+              <tbody>
+                {% for noticia in news%}
+                <tr class="news">
+                  <td><a href="{{noticia.link}}" target="_blank">{{noticia.titulo}}</a></th>
+                  <td>{{noticia.data}}</td>
+                </tr>
+
+              </tbody>
+              {% endfor %}
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="row d-flex text-center">
+        <div class="col-sm-10 col-md-8 m-auto">
+          <button class="btn btn-dark text">
+            <a class="attbutton" href="/att">Atualizar</a>
+          </button>
+        </div>
+      </section>
+
+
+    </main>
+  </div>
+  <footer class="col" id="bottombar">
+    <div>
+      <nav class="text-center">
+        <h3 class="bottom-text">Data da ultima atualização: {{dados['databoletim']}}</h3>
+      </nav>
+    </div>
+  </footer>
+</body>
+
+</html>
