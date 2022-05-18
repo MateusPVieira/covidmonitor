@@ -1,11 +1,46 @@
 import cv2
 import pytesseract
+import requests
+import os
 
+api_key = os.environ.get('API_KEY', None)
 
 def load_image():
     img = cv2.imread("static\img\oletim.png")
     return img
 
+def alternative_ocr(url, overlay, api_key, language):
+
+    payload = {'url': url,
+                'isOverlayRequired': overlay,
+                'apikey': api_key,
+                'language': language,
+                }
+    r = requests.post('https://api.ocr.space/parse/image',
+                        data=payload,
+                        )
+    return r.content.decode()
+
+def alternative_ocr_data(link):
+
+    test_url = alternative_ocr(link, False, api_key,"por")
+    confirmados = ''
+    database = test_url.split(':')
+    data = ''
+    for i in range(len(database)):
+        if "nCONFIRMADOS" in database[i]:
+            data = database[i]
+            data = data.split("\\r\\")
+
+            break
+
+    for i in range(len(data)):
+        if "nCONFIRMADOS" in data[i]:
+            confirmados = data[i+1].lstrip('n')
+
+
+
+    return confirmados
 
 def enhance_image(img):
     # crop
@@ -28,7 +63,6 @@ def enhance_image(img):
 
 def process_image_data():
     custom_config = r'--oem 3 --psm 6'
-    pytesseract.pytesseract.tesseract_cmd = "C:\Program Files\Tesseract-OCR\Tesseract.exe"
     img = load_image()
     img = enhance_image(img)
     data = pytesseract.image_to_string(img, config=custom_config)
@@ -37,7 +71,7 @@ def process_image_data():
     file.close()
 
 
-def load_data():
+def load_data(link):
     database = []
     archive= open('static\data\dados.csv','r')
     while True:
@@ -51,12 +85,12 @@ def load_data():
                 ';')  # transforma bd em lista e quebra linha a cada ; tornando cada quebra um novo elemento na lista
             database.append(bd)  # append da lista bd dentro da lista dados
     archive.close()
-    database = clear_data(database)
+    database = clear_data(database, link)
 
     return database
 
 
-def clear_data(database):
+def clear_data(database, link):
     #  limpar dados vazios
     data = []
     c = len(database)-1
@@ -78,9 +112,18 @@ def clear_data(database):
             data.append(database[i][0])
 
     # limpar dados importantes
-    data[0] = int(data[0])
-    cut = data[1].rsplit('| 0 ').strip('%')
-    data[1] = cut[1]
+    try:
+        data[0] = int(data[0])
+    except:
+        data[0] = alternative_ocr_data(link)
+        data[0] = int(data[0])
+
+    cut = data[1].rsplit('| fy ')
+    try:
+        data[1] = cut[1]
+    except:
+       cut = data[1].rsplit('| 0 ')
+       data[1] = cut[1] 
 
     #dic
     dados = {'confirmados': data[0], 'UTI': data[1]}
